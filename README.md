@@ -55,16 +55,15 @@ module rom_memory (
         data_out <= rom[address];
     end
 endmodule
+![Screenshot 2024-10-17 141859](https://github.com/user-attachments/assets/e29c4bd4-f339-4fa1-853d-4acbf7fd8f81)
 
 
 Testbench for 4KB ROM Memory
 
 // rom_memory_tb.v
 `timescale 1ns / 1ps
+module rom_4kbmemory_tb;
 
-module rom_memory_tb;
-
-    // Inputs
     reg clk;
     reg write_enable;
     reg [11:0] address;
@@ -73,8 +72,8 @@ module rom_memory_tb;
     // Outputs
     wire [7:0] data_out;
 
-    // Instantiate the ROM module
-    rom_memory uut (
+    // Instantiate the Unit Under Test (UUT)
+    rom_4kbmemory uut (
         .clk(clk),
         .write_enable(write_enable),
         .address(address),
@@ -83,39 +82,49 @@ module rom_memory_tb;
     );
 
     // Clock generation
-    always #5 clk = ~clk;  // Toggle clock every 5 ns
+    always #5 clk = ~clk;
 
-    // Test procedure
     initial begin
-        // Initialize inputs
+        // Initialize Inputs
         clk = 0;
         write_enable = 0;
-        address = 0;
-        data_in = 0;
+        address = 12'b0;
+        data_in = 8'b0;
 
-        // Write data into memory
-        #10 write_enable = 1; address = 12'd0; data_in = 8'hA5;  // Write 0xA5 at address 0
-        #10 write_enable = 1; address = 12'd1; data_in = 8'h5A;  // Write 0x5A at address 1
-        #10 write_enable = 1; address = 12'd2; data_in = 8'hFF;  // Write 0xFF at address 2
-        #10 write_enable = 1; address = 12'd3; data_in = 8'h00;  // Write 0x00 at address 3
+        // Wait for global reset
+        #10;
+        
+        // Test 1: Write some data and read it
+        write_enable = 1;
+        address = 12'h001;    // Write at address 1
+        data_in = 8'hA5;      // Write data 0xA5
+        #10;
+        
+        write_enable = 0;     // Disable write
+        address = 12'h001;    // Read from address 1
+        #10;
 
-        // Disable write and start reading from memory
-        #10 write_enable = 0; address = 12'd0;
-        #10 address = 12'd1;
-        #10 address = 12'd2;
-        #10 address = 12'd3;
+        // Test 2: Write to another address
+        write_enable = 1;
+        address = 12'h002;    // Write at address 2
+        data_in = 8'h3C;      // Write data 0x3C
+        #10;
+        
+        write_enable = 0;     // Disable write
+        address = 12'h002; 
+        #10;
 
-        // Stop the simulation
-        #10 $stop;
+        // Test 3: Read from address 1 again to check if data is retained
+        address = 12'h001;    // Read from address 1
+        #10;
+
+        // End simulation
+        $stop;
     end
+      
+endmodule 
 
-    // Monitor the values for verification
-    initial begin
-        $monitor("Time = %0t | Write Enable = %b | Address = %h | Data In = %h | Data Out = %h", 
-                 $time, write_enable, address, data_in, data_out);
-    end
-
-endmodule
+![Screenshot 2024-10-17 143657](https://github.com/user-attachments/assets/1af99195-3359-43fb-9f11-59201e813459)
 
 
 Conclusion
